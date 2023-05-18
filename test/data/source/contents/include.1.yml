@@ -1,0 +1,7 @@
+head:
+  title: Head 1
+body:
+  title: Include Body
+  lines:
+    - First line
+    - Second line

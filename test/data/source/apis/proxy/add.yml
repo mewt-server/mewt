@@ -1,0 +1,7 @@
+validateRequest: |
+  request.method == "GET" && (request.query | dict.contains("a")) && (request.query | dict.contains("b"))
+configureResponse: |
+  response.content_type = "text/plain"
+  response.status_code = 200
+makeResponse: |
+  {{ request.query | dict.get "a" }} + {{ request.query | dict.get "b" }} = {{ ((request.query | dict.get "a") | string.to_int) + ((request.query | dict.get "b") | string.to_int) }}

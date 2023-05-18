@@ -1,0 +1,40 @@
+allowedHosts: "*"
+applicationUrl: http://+:13523
+debug: false
+logging:
+  logLevel:
+    default: Warning
+    mewt: Debug
+    microsoft.aspNetCore: Warning
+    microsoft.aspNetCore.hosting: Warning
+    microsoft.hosting: Information
+server:
+  http:
+    configureResponses: null
+    redirects: []
+    rewrites: []
+    validateRequests: null
+  paths:
+    apis:
+      path: source/apis
+      updateCommand: &updateCommand |
+        update = pwd | cmd.exec "git" "pull"
+        response.status_code = update.exit_code == 0 ? 200 : 500
+        update.standard_output + update.standard_error
+    assets:
+      path: source/assets
+      updateCommand: *updateCommand
+    contents:
+      path: source/contents
+      updateCommand: *updateCommand
+    pages:
+      path: source/pages
+      updateCommand: *updateCommand
+    metadata:
+      provider: Memory
+    private:
+      provider: Memory
+    public:
+      provider: Memory
+  swagger:
+    enabled: false

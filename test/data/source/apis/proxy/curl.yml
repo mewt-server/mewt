@@ -1,0 +1,11 @@
+validateRequest: |
+  (request.method == "GET" || request.method == "POST") && (request.query | dict.contains("url"))
+configureResponse: |
+  payload = http.create_request request.method (request.query | dict.get "url")
+  if request.method == "POST"
+    payload | http.set_content (request | http.body)
+  end
+  result = http.send_request payload
+  response.content_type = result.content_type
+  response.status_code = result.status_code
+  result | http.content

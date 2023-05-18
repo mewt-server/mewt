@@ -1,0 +1,20 @@
+{
+    "build": {
+        "context": "docker/sdk",
+        "dockerfile": "docker/sdk/Dockerfile.debian"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "ms-dotnettools.csharp",
+                "redhat.vscode-yaml"
+            ]
+        }
+    },
+    "forwardPorts": [
+        5000,
+        13523
+    ],
+    "name": "sdk"
+}

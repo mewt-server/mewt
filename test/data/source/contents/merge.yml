@@ -1,0 +1,7 @@
+head:
+  title: Merge Head
+body:
+  title: Merge Body
+  lines:
+    - First line
+    - Second line

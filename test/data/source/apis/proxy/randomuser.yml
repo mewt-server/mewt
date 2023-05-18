@@ -1,0 +1,9 @@
+validateRequest: |
+  request.method == "GET"
+configureCall: |
+  message.method = "GET" | http.method
+  message.request_uri = "https://randomuser.me/api/" | http.uri
+configureResponse: |
+  response.content_type = "application/json"
+  response.status_code = 200
+  result | http.content | json.from | json.to | yaml.to | yaml.from

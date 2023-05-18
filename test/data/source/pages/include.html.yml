@@ -1,0 +1,11 @@
+content:
+  head:
+    title: Include Head
+contentFiles:
+  - include.0.yml
+  - include.1.yml
+templateIncludes:
+  - header.html
+  - footer.html
+templateFiles:
+  - include.html
