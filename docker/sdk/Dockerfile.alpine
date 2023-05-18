@@ -1,0 +1,11 @@
+# Copyright (C) 2023 Jérémy WALTHER <jeremy.walther@golflima.net>
+# Mewt is licensed under the terms of the AGPL-3.0-only license.
+# See <https://github.com/mewt-server/mewt> or README.md file for details.
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine
+WORKDIR /mewt
+RUN set -ex; \
+    apk add --no-cache bash curl dos2unix git icu openssh-client rclone; \
+    dotnet tool install --global dotnet-reportgenerator-globaltool;
+COPY rclone.conf /root/.config/rclone/rclone.conf
+CMD [ "bash" ]

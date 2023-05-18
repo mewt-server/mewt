@@ -1,0 +1,10 @@
+content:
+  head:
+    title: Full Head
+  body:
+    title: Full Body
+    lines:
+      - First line
+      - Second line
+templateFiles:
+  - full.html

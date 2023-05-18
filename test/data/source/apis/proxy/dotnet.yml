@@ -1,0 +1,6 @@
+validateRequest: |
+  request.method == "GET"
+configureResponse: |
+  response.content_type = "text/plain"
+  response.status_code = 200
+  (pwd | cmd.exec "dotnet" "--version").standard_output

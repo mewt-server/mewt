@@ -1,0 +1,47 @@
+allowedHosts: "*"
+applicationUrl: http://+:13523
+debug: false
+logging:
+  logLevel:
+      default: Warning
+      mewt: Debug
+      microsoft.aspNetCore: Warning
+      microsoft.aspNetCore.hosting: Warning
+      microsoft.hosting: Information
+server:
+  http:
+    configureResponses: null
+    redirects:
+      - regex: redirect-rule/(.*)
+        replacement: redirected/$1
+        statusCode: 302
+    rewrites:
+      - regex: ^rewrite-rule/(\d+)/(\d+)
+        replacement: rewritten?var1=$1&var2=$2
+        skipRemainingRules: true
+    validateRequests: |
+      ! (request.headers | dict.contains "X-Refuse-Request")
+  paths:
+    apis:
+      path: data/source/apis
+      updateCommand: &updateCommand pwd
+    assets:
+      path: data/source/assets
+      updateCommand: *updateCommand
+    contents:
+      path: data/source/contents
+      updateCommand: *updateCommand
+    pages:
+      path: data/source/pages
+      updateCommand: *updateCommand
+    templates:
+      path: data/source/templates
+      updateCommand: *updateCommand
+    metadata:
+      provider: Memory
+    private:
+      provider: Memory
+    public:
+      provider: Memory
+  swagger:
+    enabled: false

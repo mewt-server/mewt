@@ -1,0 +1,19 @@
+# Copyright (C) 2023 Jérémy WALTHER <jeremy.walther@golflima.net>
+# Mewt is licensed under the terms of the AGPL-3.0-only license.
+# See <https://github.com/mewt-server/mewt> or README.md file for details.
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim
+WORKDIR /mewt
+RUN set -ex; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
+    apt-get upgrade -y --fix-missing --no-install-recommends \
+        curl \
+        dos2unix \
+        git \
+        openssh-client \
+        rclone; \
+    apt-get clean -y && apt-get clean -y && apt-get autoclean -y && rm -r /var/lib/apt/lists/*; \
+    dotnet tool install --global dotnet-reportgenerator-globaltool;
+COPY rclone.conf /root/.config/rclone/rclone.conf
+CMD [ "bash" ]

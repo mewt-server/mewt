@@ -1,0 +1,114 @@
+stages:
+  - prepare
+  - test
+  - publish
+
+sdk:
+  stage: prepare
+  tags: [ docker-dind ]
+  rules:
+    - if: $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - changes:
+       - docker/sdk/*
+  script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+    - docker build -f docker/sdk/Dockerfile.debian -t ${CI_REGISTRY}/${CI_PROJECT_PATH}/sdk:${CI_COMMIT_REF_SLUG} docker/sdk/
+    - docker push ${CI_REGISTRY}/${CI_PROJECT_PATH}/sdk:${CI_COMMIT_REF_SLUG}
+
+test:
+  stage: test
+  tags: [ docker ]
+  image: ${CI_REGISTRY}/${CI_PROJECT_PATH}/sdk:${CI_COMMIT_REF_SLUG}
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  artifacts:
+    untracked: false
+    when: always
+    expire_in: 1 day
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: test/TestResults/*/coverage.cobertura.xml
+      junit: test/TestResults/junit.xml
+  script:
+    - dotnet restore
+    - dotnet test --collect:"XPlat Code Coverage" --logger:"junit;LogFilePath=./TestResults/junit.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+
+binaries:
+  stage: publish
+  tags: [ docker ]
+  image: ${CI_REGISTRY}/${CI_PROJECT_PATH}/sdk:${CI_COMMIT_REF_SLUG}
+  when: manual
+  artifacts:
+    untracked: false
+    when: on_success
+    expire_in: 1 day
+    paths:
+      - publish/bin
+  script:
+    - mkdir -p publish/bin/linux-x64 publish/bin/linux-musl-x64 publish/bin/linux-arm publish/bin/linux-arm64
+    - dotnet publish --configuration Release --output publish --runtime linux-x64 --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt publish/bin/linux-x64/
+    - dotnet publish --configuration Release --output publish --runtime linux-musl-x64 --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt publish/bin/linux-musl-x64/
+    - dotnet publish --configuration Release --output publish --runtime linux-arm --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt publish/bin/linux-arm/
+    - dotnet publish --configuration Release --output publish --runtime linux-arm64 --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt publish/bin/linux-arm64/
+    - mkdir -p publish/bin/osx-x64
+    - dotnet publish --configuration Release --output publish --runtime osx-x64 --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt publish/bin/osx-x64/
+    - mkdir -p publish/bin/win-x64 publish/bin/win-x86 publish/bin/win-arm64
+    - dotnet publish --configuration Release --output publish --runtime win-x64 --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt.exe publish/bin/win-x64/
+    - dotnet publish --configuration Release --output publish --runtime win-x86 --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt.exe publish/bin/win-x86/
+    - dotnet publish --configuration Release --output publish --runtime win-arm64 --self-contained src/mewt/mewt.csproj
+    - mv publish/mewt.exe publish/bin/win-arm64/
+    - ls -alhR publish/bin/
+
+docker:dev:
+  stage: publish
+  tags: [ docker-dind ]
+  when: manual
+  script:
+    - docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_PASSWORD}
+    - export MEWT_VERSION=$(grep -E "<Version>.*</Version>" src/mewt/mewt.csproj | cut -d'>' -f2 | cut -d'<' -f1)
+    - docker build -f docker/alpine/Dockerfile -t mewtserver/mewt:${MEWT_VERSION}-dev-alpine .
+    - docker build -f docker/debian/Dockerfile -t mewtserver/mewt:${MEWT_VERSION}-dev-debian .
+    - docker tag mewtserver/mewt:${MEWT_VERSION}-dev-debian mewtserver/mewt:${MEWT_VERSION}-dev
+    - docker push mewtserver/mewt:${MEWT_VERSION}-dev-alpine
+    - docker push mewtserver/mewt:${MEWT_VERSION}-dev-debian
+    - docker push mewtserver/mewt:${MEWT_VERSION}-dev
+
+docker:tag:
+  stage: publish
+  tags: [ docker-dind ]
+  only:
+    - tags
+  when: manual
+  script:
+    - docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_PASSWORD}
+    - docker build -f docker/alpine/Dockerfile -t mewtserver/mewt:${CI_COMMIT_TAG}-alpine .
+    - docker build -f docker/debian/Dockerfile -t mewtserver/mewt:${CI_COMMIT_TAG}-debian .
+    - docker tag mewtserver/mewt:${CI_COMMIT_TAG}-debian mewtserver/mewt:${CI_COMMIT_TAG}
+    - docker push mewtserver/mewt:${CI_COMMIT_TAG}-alpine
+    - docker push mewtserver/mewt:${CI_COMMIT_TAG}-debian
+    - docker push mewtserver/mewt:${CI_COMMIT_TAG}
+
+docker:latest:
+  stage: publish
+  tags: [ docker-dind ]
+  only:
+    - tags
+  when: manual
+  needs: [ docker:tag ]
+  script:
+    - docker login -u ${DOCKER_HUB_USER} -p ${DOCKER_HUB_PASSWORD}
+    - docker pull mewtserver/mewt:${CI_COMMIT_TAG}
+    - docker tag mewtserver/mewt:${CI_COMMIT_TAG} mewtserver/mewt:latest
+    - docker push mewtserver/mewt:latest

@@ -1,0 +1,35 @@
+allowedHosts: "*"
+applicationUrl: http://+:13523
+debug: false
+logging:
+  logLevel:
+      default: Warning
+      mewt: Debug
+      microsoft.aspNetCore: Warning
+      microsoft.aspNetCore.hosting: Warning
+      microsoft.hosting: Information
+server:
+  http:
+    configureResponses: null
+    redirects: []
+    rewrites: []
+    validateRequests: null
+  paths:
+    apis:
+      path: source/apis
+    assets:
+      path: source/assets
+    contents:
+      path: source/contents
+    pages:
+      path: source/pages
+    templates:
+      path: source/templates
+    metadata:
+      path: cache/metadata
+    private:
+      path: cache/private
+    public:
+      path: cache/public
+  swagger:
+    enabled: false

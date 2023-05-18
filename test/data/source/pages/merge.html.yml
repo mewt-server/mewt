@@ -1,0 +1,6 @@
+contentFiles:
+  - merge.yml
+templateFiles:
+  - header.html
+  - merge.html
+  - footer.html
